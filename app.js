@@ -13,13 +13,10 @@ const authRoutes   = require('./routes/auth-routes');
 const accountRoutes= require('./routes/account-routes');
 
 // WHEN INTRODUCING USERS DO THIS:
-// INSTALL THESE DEPENDENCIES: passport-local, passport, bcryptjs, express-session
+// INSTALL THESE DEPENDENCIES: bcryptjs, express-session
 // AND UN-COMMENT OUT FOLLOWING LINES:
 const session       = require('express-session');
 const MongoStore   = require('connect-mongo')(session);
-const passport      = require('passport');
-require('./configs/passport');
-// IF YOU STILL DIDN'T, GO TO 'configs/passport.js' AND UN-COMMENT OUT THE WHOLE FILE
 
 mongoose.connect(process.env.MONGODB_URI, {
   keepAlive: true,
@@ -67,9 +64,6 @@ app.use(session({
     maxAge: 24 * 60 * 60 * 1000
   }
 }));
-
-app.use(passport.initialize());
-app.use(passport.session());
 
 // ADD CORS SETTINGS HERE TO ALLOW CROSS-ORIGIN INTERACTION:
 app.use(cors({

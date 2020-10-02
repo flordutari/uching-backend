@@ -1,7 +1,7 @@
 const express = require('express');
 const authRoutes = express.Router();
-const passport = require('passport');
 const bcrypt = require('bcryptjs');
+
 const User = require('../models/User');
 
 const { isLoggedIn, isNotLoggedIn, validationLoggin } = require('../helpers/middlewares');
@@ -10,7 +10,7 @@ authRoutes.get('/me', isLoggedIn(), (req, res, next) => {
     res.json(req.session.currentUser);
 });
 
-authRoutes.post('/signup', async (req, res, next) => {
+authRoutes.post('/signup', isNotLoggedIn(), validationLoggin(), (req, res, next) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -23,80 +23,54 @@ authRoutes.post('/signup', async (req, res, next) => {
         return;
     }
 
-    User.findOne({ email }, (err, foundUser) => {
-        if (err) {
-            res.status(500).json({ message: 'Email check went bad.' });
-            return;
-        }
+    User.findOne({
+        eamil
+        }, 'eamil')
+        .then((userExists) => {
+        if (userExists) {
+            return res.status(422).json({ message: 'Email already registered' });
+        } else {
+            const salt = bcrypt.genSaltSync(10);
+            const hashPass = bcrypt.hashSync(password, salt);
 
-        if (foundUser) {
-            res.status(400).json({ message: 'Email already registered, try another one.' });
-            return;
-        }
-
-        const salt = bcrypt.genSaltSync(10);
-        const hashPass = bcrypt.hashSync(password, salt);
-
-        const aNewUser = new User({
-            email: email,
-            password: hashPass
-        });
-
-        aNewUser.save(err => {
-            if (err) {
-                res.status(400).json({ message: 'Saving user to database went wrong.' });
-                return;
-            }
-
-            req.login(aNewUser, (err) => {
-                if (err) {
-                    res.status(500).json({ message: 'Login after signup went bad.' })
-                    return;
-                }
-
-                req.session.currentUser = aNewUser;
-                res.status(200).json(aNewUser);
+            const newUser = new User({
+                email,
+                password: hashPass
             });
-        });
-    });
-});
 
-authRoutes.post('/login', (req, res, next) => {
-    passport.authenticate('local', (err, theUser, failureDetails) => {
-        if (err) {
-            res.status(500).json({ message: 'Something went wrong authenticating user' });
-            return;
+            return newUser.save()
+            .then(() => {
+            // TODO delete password 
+            req.session.currentUser = newUser;
+            res.status(200).json(newUser);
+            });
         }
+        })
+        .catch(next);
+});
 
-        if (!theUser) {
-            res.status(401).json(failureDetails);
-            return;
+authRoutes.post('/login', isNotLoggedIn(), validationLoggin(), (req, res, next) => {
+    const { email, password } = req.body;
+    User.findOne({
+        email
+        })
+        .then((user) => {
+        if (!user) {
+            return res.status(404).json({ message: 'Email not found' });
         }
-
-        req.login(theUser, (err) => {
-            if (err) {
-                res.status(500).json({ message: 'Session save went bad.' });
-                return;
-            }
-            
-            req.session.currentUser = theUser;
-            res.status(200).json(theUser);
-        });
-    })(req, res, next);
+        if (bcrypt.compareSync(password, user.password)) {
+            req.session.currentUser = user;
+            return res.status(200).json(user);
+        } else {
+            return res.status(401).json({ message: 'Email or password incorrect' });
+        }
+        })
+        .catch(next);
 });
 
-authRoutes.post('/logout', (req, res, next) => {
-    req.logout();
-    res.status(200).json({ message: 'Log out success!' });
-});
-
-authRoutes.get('/loggedin', (req, res, next) => {
-    // req.isAuthenticated() is defined by passport
-    if (req.isAuthenticated()) {
-        res.status(200).json(req.user);
-        return;
-    }
-    res.status(403).json({ message: 'Unauthorized' });
+authRoutes.post('/logout', isLoggedIn(), (req, res, next) => {
+    req.session.destroy();
+    return res.status(204).send();
 });
 
 module.exports = authRoutes;
