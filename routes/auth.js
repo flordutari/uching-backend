@@ -11,7 +11,7 @@ authRoutes.get('/me', isLoggedIn(), (req, res, next) => {
 });
 
 authRoutes.post('/signup', isNotLoggedIn(), validationLoggin(), (req, res, next) => {
-    const { email, password } = req.body;
+    const { name, surname, email, password } = req.body;
 
     if (!email || !password) {
         res.status(400).json({ message: 'Provide mail and password please.' });
@@ -24,8 +24,8 @@ authRoutes.post('/signup', isNotLoggedIn(), validationLoggin(), (req, res, next)
     }
 
     User.findOne({
-        eamil
-        }, 'eamil')
+        email
+        }, 'email')
         .then((userExists) => {
         if (userExists) {
             return res.status(422).json({ message: 'Email already registered' });
@@ -34,6 +34,8 @@ authRoutes.post('/signup', isNotLoggedIn(), validationLoggin(), (req, res, next)
             const hashPass = bcrypt.hashSync(password, salt);
 
             const newUser = new User({
+                name,
+                surname,
                 email,
                 password: hashPass
             });

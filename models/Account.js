@@ -12,10 +12,10 @@ const accountSchema = new Schema({
     type: ObjectId,
     ref: 'Movement'
   }],
-  owner: [{
+  owner: {
     type: ObjectId,
     ref: 'User'
-  }]
+  }
 }, {
   timestamps: {
     createdAt: 'created_at',

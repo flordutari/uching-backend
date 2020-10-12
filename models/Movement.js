@@ -15,16 +15,20 @@ const movementSchema = new Schema({
   },
   category : {
     type: String,
+    enum: ['Cash', 'Clothes', 'Holidays', 'Leisure', 'Others', 'Rent', 'Services', 'Supermarket', 'Taxes', 'Transport'],
     default: 'Others'
   },
   description: {
     type: String,
-    default: '../img/default-profile.png'
   },
   account: {
     type: ObjectId,
     ref: 'Account'
   },
+  date: {
+    type: Date,
+    default: Date.now
+  }
 }, {
   timestamps: {
     createdAt: 'created_at',
@@ -35,3 +39,4 @@ const movementSchema = new Schema({
 const Movement = mongoose.model('Movement', movementSchema);
 
 module.exports = Movement;
+

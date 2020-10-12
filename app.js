@@ -9,8 +9,8 @@ const logger       = require('morgan');
 const mongoose     = require('mongoose');
 const path         = require('path');
 
-const authRoutes   = require('./routes/auth-routes');
-const accountRoutes= require('./routes/account-routes');
+const auth = require('./routes/auth');
+const api = require('./routes/api');
 
 // WHEN INTRODUCING USERS DO THIS:
 // INSTALL THESE DEPENDENCIES: bcryptjs, express-session
@@ -72,8 +72,8 @@ app.use(cors({
 }));
 
 // ROUTES MIDDLEWARE STARTS HERE:
-app.use('/api', authRoutes);
-app.use('/api', accountRoutes);
+app.use('/auth', auth);
+app.use('/api', api);
 
 
 module.exports = app;
